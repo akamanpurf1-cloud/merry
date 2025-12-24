@@ -2,15 +2,14 @@
 <html lang="hi">
 <head>
   <meta charset="UTF-8" />
+  <title>Merry Christmas Akash</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Merry Christmas – Personalized</title>
   <style>
     body {
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       background: linear-gradient(135deg, #0b1026, #1b2940);
-      color: #fff;
-      margin: 0; padding: 0;
+      color: #fff; font-family: sans-serif;
       display: grid; place-items: center; min-height: 100vh;
+      margin: 0; padding: 0;
     }
     .card {
       text-align: center; padding: 24px; border-radius: 16px;
@@ -21,6 +20,22 @@
     h2 { font-size: 1.6rem; margin: 8px 0 16px; color: #ffd27a; }
     p  { margin: 6px 0; opacity: 0.9; }
     .name { font-weight: 700; color: #88ffdc; }
+    .santa {
+      width: 100%; max-width: 400px;
+      border-radius: 12px;
+      margin: 0 auto 16px;
+      animation: idle 2s infinite;
+    }
+    .talking { animation: talk 0.3s infinite; }
+    @keyframes talk {
+      0% { transform: scaleY(1); }
+      50% { transform: scaleY(0.95); }
+      100% { transform: scaleY(1); }
+    }
+    @keyframes idle {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
     .btns { margin-top: 18px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
     button {
       border: none; border-radius: 10px; padding: 10px 14px; cursor: pointer;
@@ -32,6 +47,7 @@
 </head>
 <body>
   <div class="card">
+    <img src="santa-scene.jpeg" alt="Santa Christmas Scene" class="santa" id="santa" />
     <h1>🎄 Merry Christmas!</h1>
     <h2 id="line">Welcome</h2>
     <p id="hindi"></p>
@@ -39,37 +55,31 @@
       <button id="speakBtn">🔊 Phirse sunao</button>
       <button class="secondary" id="shareBtn">📲 WhatsApp par share</button>
     </div>
-    <small>Tip: Link me <code>?name=Anuj</code> add karo, jaise: <code>.../merry/?name=Anuj</code></small>
+    <small>Tip: Link me <code>?name=Akash</code> add karo, ya Share button use karo.</small>
   </div>
 
   <script>
-    // Get name from URL: ?name=Anuj
     const params = new URLSearchParams(window.location.search);
     const rawName = params.get('name') || '';
-    const name = (rawName || '').trim();
+    const name = rawName.trim() || 'Dost';
+    const englishLine = `Merry Christmas, ${name}!`;
+    const hindiLine   = `मेरी क्रिसमस, ${name}!`;
 
-    // Build messages
-    const displayName = name ? name : 'Dost';
-    const englishLine = `Merry Christmas, ${displayName}!`;
-    const hindiLine   = `मेरी क्रिसमस, ${displayName}!`;
-
-    // Put on page
     document.getElementById('line').textContent = englishLine;
     document.getElementById('hindi').textContent = hindiLine;
 
-    // Speech: try Hindi voice, fallback to English
     let voices = [];
     function speakOnce() {
+      const santa = document.getElementById('santa');
       const utter = new SpeechSynthesisUtterance();
-      // Prefer Hindi voice if available
       const hiVoice = voices.find(v => /hi-|Hindi|India/i.test(v.lang) || /Hindi/i.test(v.name));
       const enVoice = voices.find(v => /en-/i.test(v.lang));
       utter.voice = hiVoice || enVoice || null;
-
-      // If Hindi voice chosen, speak Hindi; else English
       utter.text = hiVoice ? hindiLine : englishLine;
-      utter.rate = 1.0;    // speed
-      utter.pitch = 1.0;   // tone
+      utter.rate = 1.0;
+      utter.pitch = 1.0;
+      utter.onstart = () => santa.classList.add('talking');
+      utter.onend   = () => santa.classList.remove('talking');
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(utter);
     }
@@ -77,7 +87,6 @@
     function loadVoicesThenSpeak() {
       voices = window.speechSynthesis.getVoices();
       if (!voices || voices.length === 0) {
-        // Some browsers load voices asynchronously
         window.speechSynthesis.onvoiceschanged = () => {
           voices = window.speechSynthesis.getVoices();
           speakOnce();
@@ -87,31 +96,21 @@
       }
     }
 
-    // Auto speak on page load (if name present)
-    if (name) {
-      loadVoicesThenSpeak();
-    }
+    // Auto speak on page load
+    if (name) loadVoicesThenSpeak();
 
-    // Buttons
     document.getElementById('speakBtn').addEventListener('click', loadVoicesThenSpeak);
 
-    // Simple WhatsApp share with same page, ask for a name
+    // WhatsApp direct share
     document.getElementById('shareBtn').addEventListener('click', () => {
-      const nm = prompt('Kisko bhejna hai? Naam likho:', 'Anuj');
+      const nm = prompt('Kisko bhejna hai? Naam likho:', name);
       if (!nm) return;
       const base = window.location.origin + window.location.pathname;
       const link = `${base}?name=${encodeURIComponent(nm.trim())}`;
-      const msg = `🎄 Merry Christmas ${nm}! Ye link kholo: ${link}`;
-      // WhatsApp Web/Mobile share
-      const wa = `https://wa.me/?text=${encodeURIComponent(msg)}`;
-      window.open(wa, '_blank');
+      const msg = `🎄 Merry Christmas ${nm}! Dekho ye surprise: ${link}`;
+      const wa = `whatsapp://send?text=${encodeURIComponent(msg)}`;
+      window.location.href = wa;
     });
-
-    // Fallback: if no name, invite user to add it
-    if (!name) {
-      document.querySelector('small').textContent =
-        'Tip: Link ke end me ?name=Anuj add karo, ya Share button use karo.';
-    }
   </script>
 </body>
 </html>
